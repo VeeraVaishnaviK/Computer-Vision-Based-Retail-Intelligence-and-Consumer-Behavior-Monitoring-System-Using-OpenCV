@@ -1,174 +1,133 @@
 /**
- * Retail Intelligence Dashboard JS
- * Handles data fetching, Chart.js rendering, and auto-refresh logic.
+ * Corporate BI Dashboard Logic
  */
 
-// Global Chart Instances
-let zoneVisitsChart;
-let zoneDwellChart;
+let zoneAnalyticsChart;
 let queueChart;
 
-// Chart.js Default styling for Dark Theme
-Chart.defaults.color = '#94a3b8';
-Chart.defaults.font.family = "'Inter', sans-serif";
-Chart.defaults.scale.grid.color = 'rgba(255, 255, 255, 0.05)';
-Chart.defaults.plugins.tooltip.backgroundColor = 'rgba(15, 23, 42, 0.9)';
-Chart.defaults.plugins.tooltip.padding = 12;
-Chart.defaults.plugins.tooltip.cornerRadius = 8;
-
-// Colors for zones
-const zoneColors = {
-    'Electronics': 'rgba(59, 130, 246, 0.8)', // Blue
-    'Grocery': 'rgba(16, 185, 129, 0.8)',     // Green
-    'Fashion': 'rgba(139, 92, 246, 0.8)',     // Purple
-    'Billing': 'rgba(245, 158, 11, 0.8)'      // Orange
-};
-
-const zoneColorsSolid = {
-    'Electronics': '#3b82f6',
-    'Grocery': '#10b981',
-    'Fashion': '#8b5cf6',
-    'Billing': '#f59e0b'
-};
-
-// ==========================================
-// Data Fetching
-// ==========================================
+// Setup Light Theme defaults for Corporate look
+Chart.defaults.color = '#666666';
+Chart.defaults.font.family = "'Roboto', -apple-system, sans-serif";
+Chart.defaults.scale.grid.color = '#e0e0e0';
+Chart.defaults.plugins.tooltip.backgroundColor = 'rgba(255, 255, 255, 0.9)';
+Chart.defaults.plugins.tooltip.titleColor = '#333333';
+Chart.defaults.plugins.tooltip.bodyColor = '#666666';
+Chart.defaults.plugins.tooltip.borderColor = '#e0e0e0';
+Chart.defaults.plugins.tooltip.borderWidth = 1;
 
 async function fetchSummary() {
     try {
         const response = await fetch('/api/summary');
-        if (!response.ok) throw new Error("No data");
+        if (!response.ok) return;
         const data = await response.json();
         
         document.getElementById('val-entries').innerText = data.total_entries || 0;
-        document.getElementById('val-exits').innerText = data.total_exits || 0;
-        document.getElementById('val-peak').innerText = data.peak_occupancy || 0;
         document.getElementById('val-active').innerText = data.active_visitors || 0;
-    } catch (e) {
-        console.log("Summary data not available yet.");
-    }
+        document.getElementById('val-peak').innerText = data.peak_occupancy || 0;
+    } catch (e) { console.error("Summary error", e); }
 }
 
 async function fetchZones() {
     try {
         const response = await fetch('/api/zones');
-        if (!response.ok) throw new Error("No data");
+        if (!response.ok) return;
         const data = await response.json();
-        
         if (data.length === 0) return;
         
         const labels = data.map(d => d.zone_name);
         const visits = data.map(d => d.total_visits);
         const dwell = data.map(d => d.avg_dwell.toFixed(1));
-        const bgColors = labels.map(l => zoneColors[l] || 'rgba(148, 163, 184, 0.8)');
-        const borderColors = labels.map(l => zoneColorsSolid[l] || '#94a3b8');
 
-        // Update Visits Chart
-        if (!zoneVisitsChart) {
-            const ctx = document.getElementById('zoneVisitsChart').getContext('2d');
-            zoneVisitsChart = new Chart(ctx, {
+        if (!zoneAnalyticsChart) {
+            const ctx = document.getElementById('zoneAnalyticsChart').getContext('2d');
+            zoneAnalyticsChart = new Chart(ctx, {
                 type: 'bar',
                 data: {
                     labels: labels,
-                    datasets: [{
-                        label: 'Total Visits',
-                        data: visits,
-                        backgroundColor: bgColors,
-                        borderColor: borderColors,
-                        borderWidth: 1,
-                        borderRadius: 6
-                    }]
+                    datasets: [
+                        {
+                            label: 'Total Visits',
+                            data: visits,
+                            backgroundColor: '#2c7be5', // Corporate Blue
+                            yAxisID: 'y',
+                            borderRadius: 4
+                        },
+                        {
+                            label: 'Avg Dwell Time (s)',
+                            data: dwell,
+                            backgroundColor: '#00d27a', // Corporate Green
+                            yAxisID: 'y1',
+                            borderRadius: 4
+                        }
+                    ]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    plugins: { legend: { display: false } }
-                }
-            });
-        } else {
-            zoneVisitsChart.data.labels = labels;
-            zoneVisitsChart.data.datasets[0].data = visits;
-            zoneVisitsChart.update();
-        }
-
-        // Update Dwell Chart
-        if (!zoneDwellChart) {
-            const ctx = document.getElementById('zoneDwellChart').getContext('2d');
-            zoneDwellChart = new Chart(ctx, {
-                type: 'doughnut',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        data: dwell,
-                        backgroundColor: bgColors,
-                        borderColor: 'transparent',
-                        borderWidth: 2,
-                        hoverOffset: 4
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    cutout: '70%',
-                    plugins: {
-                        legend: { position: 'right' }
+                    interaction: {
+                        mode: 'index',
+                        intersect: false,
+                    },
+                    scales: {
+                        x: {
+                            grid: { display: false }
+                        },
+                        y: {
+                            type: 'linear',
+                            display: true,
+                            position: 'left',
+                            title: { display: true, text: 'Visits' }
+                        },
+                        y1: {
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
+                            grid: { drawOnChartArea: false },
+                            title: { display: true, text: 'Seconds' }
+                        }
                     }
                 }
             });
         } else {
-            zoneDwellChart.data.labels = labels;
-            zoneDwellChart.data.datasets[0].data = dwell;
-            zoneDwellChart.update();
+            zoneAnalyticsChart.data.labels = labels;
+            zoneAnalyticsChart.data.datasets[0].data = visits;
+            zoneAnalyticsChart.data.datasets[1].data = dwell;
+            zoneAnalyticsChart.update();
         }
-    } catch (e) {
-        console.log("Zone data not available yet.");
-    }
+    } catch (e) { console.error("Zone error", e); }
 }
 
 async function fetchQueue() {
     try {
         const response = await fetch('/api/queue');
-        if (!response.ok) throw new Error("No data");
+        if (!response.ok) return;
         const data = await response.json();
         
         if (data.length === 0) return;
 
-        // Extract time (HH:MM:SS) for x-axis
+        const latest = data[data.length - 1];
+        document.getElementById('val-queue').innerText = latest.queue_length;
+        const badge = document.getElementById('queue-badge');
+        badge.innerText = "Status: " + latest.crowd_level;
+        badge.className = 'kpi-label badge-' + latest.crowd_level.toLowerCase();
+
         const labels = data.map(d => {
             const dObj = new Date(d.timestamp);
-            return `${dObj.getHours().toString().padStart(2,'0')}:${dObj.getMinutes().toString().padStart(2,'0')}:${dObj.getSeconds().toString().padStart(2,'0')}`;
+            return `${dObj.getHours().toString().padStart(2,'0')}:${dObj.getMinutes().toString().padStart(2,'0')}`;
         });
         const lengths = data.map(d => d.queue_length);
         
-        // Update crowd badge based on latest data
-        const latest = data[data.length - 1];
-        const badge = document.getElementById('queue-badge');
-        badge.innerText = latest.crowd_level;
-        badge.className = 'badge ' + latest.crowd_level.toLowerCase();
-
         if (!queueChart) {
             const ctx = document.getElementById('queueChart').getContext('2d');
-            
-            // Create gradient
-            let gradient = ctx.createLinearGradient(0, 0, 0, 300);
-            gradient.addColorStop(0, 'rgba(244, 63, 94, 0.5)'); // Rose
-            gradient.addColorStop(1, 'rgba(244, 63, 94, 0.0)');
-
             queueChart = new Chart(ctx, {
-                type: 'line',
+                type: 'bar', // Using bar chart for queue volume over time is very BI
                 data: {
                     labels: labels,
                     datasets: [{
-                        label: 'Queue Length',
+                        label: 'People in Queue',
                         data: lengths,
-                        borderColor: '#f43f5e',
-                        backgroundColor: gradient,
-                        borderWidth: 2,
-                        fill: true,
-                        tension: 0.4, // smooth curves
-                        pointRadius: 2,
-                        pointBackgroundColor: '#f43f5e'
+                        backgroundColor: '#e63757', // Alert red/pink
+                        borderRadius: 2
                     }]
                 },
                 options: {
@@ -176,51 +135,54 @@ async function fetchQueue() {
                     maintainAspectRatio: false,
                     plugins: { legend: { display: false } },
                     scales: {
-                        y: { beginAtZero: true, suggestedMax: 5 }
+                        x: { 
+                            ticks: { maxTicksLimit: 10 },
+                            grid: { display: false }
+                        },
+                        y: { 
+                            beginAtZero: true, 
+                            suggestedMax: 5 
+                        }
                     }
                 }
             });
         } else {
             queueChart.data.labels = labels;
             queueChart.data.datasets[0].data = lengths;
-            queueChart.update('none'); // Update without full animation for smoother polling
+            queueChart.update('none');
         }
-    } catch (e) {
-        console.log("Queue data not available yet.");
-    }
+    } catch (e) { console.error("Queue error", e); }
 }
 
 function updateHeatmap() {
     const img = document.getElementById('heatmap-img');
-    // Append timestamp to bust browser cache
-    img.src = '/api/heatmap?t=' + new Date().getTime();
+    const fallback = document.getElementById('heatmap-fallback');
+    
+    const tempImg = new Image();
+    tempImg.onload = function() {
+        img.src = this.src;
+        img.style.display = 'block';
+        fallback.style.display = 'none';
+    };
+    tempImg.onerror = function() {
+        img.style.display = 'none';
+        fallback.style.display = 'block';
+    };
+    tempImg.src = '/api/heatmap?t=' + new Date().getTime();
 }
-
-// ==========================================
-// Initialization and Polling
-// ==========================================
 
 function updateAll() {
     fetchSummary();
     fetchZones();
     fetchQueue();
     updateHeatmap();
-    
-    // Update timestamp
-    const now = new Date();
-    document.getElementById('update-time').innerText = now.toLocaleTimeString();
+    document.getElementById('update-time').innerText = new Date().toLocaleTimeString();
 }
 
-// Event Listeners
 document.getElementById('refresh-btn').addEventListener('click', () => {
-    const btn = document.getElementById('refresh-btn');
-    btn.innerText = "Refreshing...";
     updateAll();
-    setTimeout(() => { btn.innerText = "Refresh Data"; }, 500);
 });
 
-// Initial load
+// Init
 updateAll();
-
-// Auto-refresh every 3 seconds for live dashboard feel
 setInterval(updateAll, 3000);
