@@ -1,93 +1,140 @@
-# Computer Vision-Based Retail Intelligence and Consumer Behavior Monitoring System
+<div align="center">
+  <img src="https://img.icons8.com/color/96/000000/artificial-intelligence.png" alt="AI Icon"/>
+  
+  # Computer Vision-Based Retail Intelligence and Consumer Behavior Monitoring System
+  
+  <p>An enterprise-grade, real-time computer vision analytics platform designed to transform physical retail spaces into measurable data environments using <strong>YOLOv8</strong>, <strong>DeepSORT</strong>, and a dynamic <strong>Web Dashboard</strong>.</p>
 
-This project is a comprehensive Computer Vision system designed to analyze consumer behavior in a retail environment using a standard webcam. It processes video feeds in real-time to detect customers, track their movements, analyze zone interactions, manage queues, and generate actionable analytics.
+  <p>
+    <img src="https://img.shields.io/badge/Python-3.10+-blue.svg" alt="Python Version"/>
+    <img src="https://img.shields.io/badge/OpenCV-4.x-green.svg" alt="OpenCV Version"/>
+    <img src="https://img.shields.io/badge/YOLOv8-Ultralytics-orange.svg" alt="YOLOv8"/>
+    <img src="https://img.shields.io/badge/Flask-Backend-lightgrey.svg" alt="Flask"/>
+  </p>
+</div>
 
-## Features
+---
 
-*   **Real-time Person Detection & Tracking:** Uses YOLOv4-tiny (with HOG fallback) for fast and accurate detection, coupled with a Centroid Tracker for maintaining persistent identities across frames.
-*   **Occupancy & Counting:** Accurately counts entries and exits across defined lines to monitor total store occupancy.
-*   **Movement Analytics:** Calculates total distance traveled, instantaneous speed, and generates smooth movement trails for each customer.
-*   **Zone & Behavior Analysis:** Defines virtual retail zones (e.g., Electronics, Grocery, Fashion, Billing) and measures dwell times, visit frequencies, and favorite zones per customer.
-*   **Queue Management:** Monitors the billing area, estimates wait times based on queue length, classifies crowd density, and triggers visual alerts for overcrowding.
-*   **Spatial Heatmaps:** Generates Gaussian-weighted heatmaps highlighting high-traffic areas, accessible live or generated offline from historical data.
-*   **Dual Data Storage:** Logs all events simultaneously to human-readable CSV files and a structured SQLite database for robust session management and complex querying.
-*   **Analytics Dashboard:** Automatically generates a suite of Matplotlib charts and a formatted text report detailing session statistics, visitor trends, and zone popularity upon closing the application.
+## 📖 Overview
 
-## Requirements
+Physical retail stores lack the granular analytics inherent to e-commerce (e.g., bounce rate, time spent on page, click-through rates). This system solves this by analyzing live security camera feeds to extract highly actionable business intelligence in real-time. 
 
-*   Python 3.8+
-*   OpenCV (`opencv-python`)
-*   NumPy
-*   Pandas
-*   Matplotlib
-*   SciPy
+Using state-of-the-art deep learning, the system tracks customer journeys, measures zone engagement (e.g., Electronics vs. Grocery), monitors checkout queues, and visualizes crowd density—all accessible through a beautifully designed, responsive Business Intelligence (BI) web dashboard.
 
-## Installation
+> **Live Deployment:** *(Link to be added post-deployment)*
 
-1.  **Clone the repository.**
-2.  **Install dependencies:**
-    ```bash
-    pip install -r requirements.txt
-    ```
-3.  **Download Model Weights:**
-    Run the provided script to fetch the YOLOv4-tiny weights and config files:
-    ```bash
-    python download_models.py
-    ```
+---
 
-## Usage
+## ✨ Key Features
 
-You can run the system using the main launcher:
+* **🎥 Live Video Streaming:** Real-time MJPEG camera stream embedded directly in the dashboard, augmented with tracking bounding boxes and virtual store zones.
+* **🧍‍♂️ Person Detection & Tracking:** Highly accurate, frame-by-frame person identification utilizing **YOLOv8** and **DeepSORT**.
+* **📊 Interactive BI Dashboard:** A light-themed, professional dashboard built with **Bootstrap 5** and **Chart.js** displaying real-time KPI metrics.
+* **📍 Zone Analytics & Heatmaps:** Automatically maps customer movement to logical store zones, computing dwell times and generating live spatial heatmaps.
+* **🛒 Queue Management:** Detects when the checkout queue exceeds comfortable capacities and issues real-time alerts.
+* **🗄️ Robust Data Persistence:** All footfall and behavior events are logged securely into an **SQLite** database for historical queries.
+* **📄 Instant PDF Reports:** One-click generation of beautifully formatted PDF analytics reports for management review.
 
+---
+
+## 🏗️ System Architecture
+
+The application is built on a multi-threaded architecture to decouple the heavy computer vision processing from the web API layer, ensuring maximum FPS and a responsive UI.
+
+1. **Vision Thread (`main.py`):** Captures video frames, runs YOLOv8 inference, updates DeepSORT tracks, computes analytics (zone intersections, movement), and logs events to SQLite. Passes the final annotated frame to the shared state.
+2. **Web Thread (`web_app.py`):** A Flask web server that serves the dashboard, provides REST API endpoints (`/api/summary`, `/api/events`, etc.) by querying the SQLite database, and streams the MJPEG video feed.
+3. **Shared State (`shared_state.py`):** Thread-safe locking mechanism allowing the Vision Thread to safely hand off video frames to the Web Thread.
+
+---
+
+## 📂 File Structure
+
+```text
+├── analytics/                 # Business logic for retail metrics
+│   ├── behavior_analyzer.py   # Computes zone dwell time & visits
+│   ├── heatmap_generator.py   # Generates spatial movement heatmaps
+│   └── queue_manager.py       # Monitors checkout line volumes
+├── core/                      # Core Computer Vision pipeline
+│   ├── detector.py            # YOLOv8 object detection wrapper
+│   ├── tracker.py             # DeepSORT tracking implementation
+│   ├── entry_exit_counter.py  # Line-crossing algorithms for footfall
+│   └── zone_manager.py        # Polygon intersection logic for virtual zones
+├── database/                  # Storage Layer
+│   └── db_manager.py          # SQLite database schema and ORM methods
+├── models/                    # AI Weights (Auto-downloaded)
+│   ├── yolov8n.pt             # YOLOv8 nano model
+│   └── deep_sort_weights/     # DeepSORT feature extraction weights
+├── static/                    # Frontend Web Assets
+│   ├── css/style.css          # Custom Bootstrap overrides
+│   └── js/main.js             # Client-side AJAX polling & Chart.js logic
+├── templates/                 # Frontend Views
+│   └── index.html             # Main dashboard UI
+├── main.py                    # The core OpenCV processing loop
+├── web_app.py                 # The Flask Backend API
+├── run.py                     # Thread launcher (Starts both CV & Web Server)
+├── shared_state.py            # Thread-safe cross-process variable sharing
+└── config.py                  # Global configurations (Zones, Polygons, Thresholds)
+```
+
+---
+
+## 🛠️ Technologies Used
+
+### Deep Learning & Computer Vision
+* **Ultralytics YOLOv8:** For high-speed, accurate person bounding-box detection.
+* **DeepSORT:** For assigning persistent unique IDs to tracked persons across frames using visual feature extraction.
+* **OpenCV:** For video stream decoding, frame manipulation, and overlay drawing.
+
+### Backend & Data
+* **Python 3.10+:** Core programming language.
+* **Flask:** Lightweight WSGI web application framework.
+* **SQLite:** Embedded relational database for zero-config data persistence.
+* **Shapely:** For complex geometric calculations (e.g., Point-in-Polygon zone intersections).
+
+### Frontend Dashboard
+* **HTML5 / CSS3 / JavaScript (ES6)**
+* **Bootstrap 5:** Responsive CSS framework.
+* **Chart.js:** HTML5 Canvas-based chart rendering.
+* **html2pdf.js:** Client-side PDF report generation.
+
+---
+
+## 🚀 Getting Started
+
+### 1. Installation
+Clone the repository and install the dependencies:
+```bash
+git clone https://github.com/VeeraVaishnaviK/Computer-Vision-Based-Retail-Intelligence-and-Consumer-Behavior-Monitoring-System-Using-OpenCV.git
+cd Computer-Vision-Based-Retail-Intelligence-and-Consumer-Behavior-Monitoring-System-Using-OpenCV
+
+pip install -r requirements.txt
+```
+
+### 2. Download AI Models
+Run the setup script to download the YOLOv8 and DeepSORT weights into the `models/` directory:
+```bash
+python download_models.py
+```
+
+### 3. Run the System
+Launch the multi-threaded application (this will start both the OpenCV camera window and the background web server):
 ```bash
 python run.py
 ```
 
-### Command Line Arguments
-
-*   `--video <path>`: Run the analysis on a pre-recorded video file instead of the webcam.
-*   `--hog`: Force the system to use the HOG+SVM detector instead of YOLOv4-tiny (useful for testing on systems without YOLO weights).
-*   `--camera <index>`: Specify the camera index (default is 0).
-*   `--no-display`: Run in headless mode without showing the GUI.
-
-Example:
-```bash
-python run.py --video sample_retail_footage.mp4
+### 4. View the Dashboard
+Once the system is running, open your web browser and navigate to:
+```text
+http://localhost:5000
 ```
 
-### Interactive Controls
+---
 
-While the display window is active, you can use the following keyboard controls:
+## 💡 Configuration
+You can customize the store layout by editing `config.py`. Update the polygon coordinates in `ZONES` to match your specific camera angle and store layout (e.g., defining where the 'Electronics' or 'Billing' areas are located). You can also adjust the `ENTRY_LINE` coordinates for footfall counting.
 
-*   `q` : Quit the application. This will safely close the database session, flush logs, and auto-generate the analytics dashboard and report.
-*   `r` : Reset all counters (entries, exits, occupancy).
-*   `s` : Save a screenshot of the current frame to the `data/reports/` directory.
-*   `h` : Toggle between YOLOv4-tiny and HOG detection backends.
-*   `m` : Save a snapshot of the current accumulated heatmap to `data/reports/`.
-*   `SPACE` : Pause or resume the video feed.
+---
 
-## Project Structure
-
-*   `main.py` / `run.py`: Application entry points.
-*   `config.py`: Centralized configuration constants (zones, thresholds, paths).
-*   `core/`: Core computer vision modules (`detector.py`, `tracker.py`, `counter.py`, `movement_analyzer.py`, `zone_manager.py`).
-*   `analytics/`: Advanced analysis modules (`behavior_analyzer.py`, `queue_manager.py`, `heatmap_generator.py`).
-*   `database/`: Data persistence handling (`csv_logger.py`, `db_manager.py`).
-*   `dashboard/`: Report and chart generation tools (`dashboard.py`, `report_generator.py`).
-*   `utils/`: Helper functions for math, drawing, and video handling.
-*   `data/`: Generated artifacts (logs, SQLite DB, reports, models).
-
-## Generating Analytics Offline
-
-You can regenerate the charts and reports from historical CSV data without running the main camera loop:
-
-```bash
-python -m dashboard.dashboard
-python -m dashboard.report_generator
-```
-
-To generate a heatmap offline from `movement_log.csv`:
-
-```bash
-python -m analytics.heatmap_generator
-```
+<div align="center">
+  <i>Developed for Advanced Retail Analytics & Computer Vision Demonstrations</i>
+</div>
