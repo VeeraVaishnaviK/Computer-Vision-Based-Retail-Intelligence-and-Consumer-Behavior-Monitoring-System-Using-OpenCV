@@ -1,0 +1,35 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+*.egg-info/
+.installed.cfg
+*.egg
+.pytest_cache/
+
+# Data and Models
+data/logs/*.csv
+data/reports/*.png
+data/reports/*.txt
+data/*.db
+data/retail_intelligence.db
+models/*.weights
+
+# OS
+.DS_Store
+Thumbs.db
