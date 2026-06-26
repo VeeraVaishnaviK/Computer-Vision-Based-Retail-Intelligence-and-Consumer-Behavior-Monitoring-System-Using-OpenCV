@@ -48,6 +48,7 @@ from database.csv_logger import CSVLogger
 from database.db_manager import DatabaseManager
 from dashboard.dashboard import RetailDashboard
 from dashboard.report_generator import ReportGenerator
+from shared_state import SharedState
 from utils.video_utils import get_video_capture, preprocess_frame, release_capture
 from utils.drawing_utils import (
     draw_bounding_box,
@@ -371,6 +372,10 @@ def main():
 
             # Info panel
             display_frame = draw_info_panel(frame, metrics)
+            
+            # Pass frame to web dashboard
+            SharedState.set_frame(display_frame)
+            
             cv2.imshow("Retail Intelligence System", display_frame)
 
         # =====================================================
