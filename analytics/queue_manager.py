@@ -51,18 +51,20 @@ class QueueManager:
         history:          Deque of recent queue snapshots for trends.
         peak_length:      Maximum queue length observed in this session.
         csv_logger:       CSVLogger instance for data persistence.
+        db:               DatabaseManager instance for data persistence.
         log_interval:     Minimum seconds between CSV writes.
     """
 
-    def __init__(self, csv_logger=None, queue_zone="Billing",
+    def __init__(self, csv_logger=None, db=None, queue_zone="Billing",
                  log_interval=2.0):
         """
         Initialize the queue manager.
 
         Args:
             csv_logger:   CSVLogger instance. If None, CSV logging disabled.
+            db:           DatabaseManager instance. If None, DB logging disabled.
             queue_zone:   Name of the zone to monitor as queue.
-            log_interval: Seconds between CSV log entries.
+            log_interval: Seconds between log entries.
         """
         self.queue_zone = queue_zone
         self.crowd_thresholds = config.CROWD_THRESHOLDS
@@ -86,8 +88,9 @@ class QueueManager:
         # Per-person queue entry times for individual wait tracking
         self.queue_entry_times = {}  # {person_id: entry_timestamp}
 
-        # CSV logging
+        # CSV and DB logging
         self.csv_logger = csv_logger
+        self.db = db
         self.log_interval = log_interval
         self._last_log_time = 0.0
 
@@ -185,17 +188,28 @@ class QueueManager:
         self.history.append(snapshot)
 
         # =====================================================
-        # Log to CSV at controlled intervals
+        # Log to CSV/DB at controlled intervals
         # =====================================================
-        if self.csv_logger is not None:
-            if current_time - self._last_log_time >= self.log_interval:
+        if current_time - self._last_log_time >= self.log_interval:
+            now_iso = datetime.now().isoformat()
+            
+            if self.csv_logger is not None:
                 self.csv_logger.log_queue(
                     queue_length=self.current_length,
                     estimated_wait=self.current_wait,
                     crowd_level=self.current_level,
                     alert_triggered=self.alert_active,
                 )
-                self._last_log_time = current_time
+            
+            if self.db is not None:
+                self.db.insert_queue(
+                    timestamp=now_iso,
+                    queue_length=self.current_length,
+                    wait_estimate=self.current_wait,
+                    crowd_level=self.current_level,
+                    alert_triggered=int(self.alert_active)
+                )
+            self._last_log_time = current_time
 
         return self.get_status()
 

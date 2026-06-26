@@ -159,10 +159,10 @@ def main():
     zone_manager = ZoneManager()
 
     # Behavior Analyzer (Phase 3)
-    behavior_analyzer = BehaviorAnalyzer(csv_logger=csv_logger)
+    behavior_analyzer = BehaviorAnalyzer(csv_logger=csv_logger, db=db)
 
     # Queue Manager (Phase 4)
-    queue_manager = QueueManager(csv_logger=csv_logger, log_interval=2.0)
+    queue_manager = QueueManager(csv_logger=csv_logger, log_interval=2.0, db=db)
 
     # Heatmap Generator (Phase 6)
     heatmap_generator = HeatmapGenerator(

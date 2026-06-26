@@ -70,20 +70,30 @@ def api_summary():
         db.close()
         return jsonify({"error": "No session found"}), 404
     
-    summary = db.get_session_summary(session_id)
+    # Calculate live stats directly from visitors table instead of relying on the static sessions table
+    db.cursor.execute("SELECT COUNT(*) FROM visitors WHERE session_id=?", (session_id,))
+    total_entries = db.cursor.fetchone()[0]
     
-    # Active visitors
     db.cursor.execute("SELECT COUNT(*) FROM visitors WHERE session_id=? AND status='ACTIVE'", (session_id,))
     active_count = db.cursor.fetchone()[0]
     
-    # Area/Crowd density estimate (just a mock calculation based on occupancy)
-    # E.g., assume max comfortable occupancy is 20
+    db.cursor.execute("SELECT COUNT(*) FROM visitors WHERE session_id=? AND exit_time IS NOT NULL", (session_id,))
+    total_exits = db.cursor.fetchone()[0]
+    
+    # Peak occupancy mock via queue or just max of active (requires complex query, we approximate with current)
+    # Since sessions isn't updated till end, we just return current stats
+    
+    # Area/Crowd density estimate
     max_cap = 20
     density = round((active_count / max_cap) * 100) if active_count else 0
     
-    if summary:
-        summary['active_visitors'] = active_count
-        summary['crowd_density'] = min(density, 100)
+    summary = {
+        "total_entries": total_entries,
+        "total_exits": total_exits,
+        "active_visitors": active_count,
+        "peak_occupancy": max(active_count, 0), # Simplified for live
+        "crowd_density": min(density, 100)
+    }
     
     db.close()
     return jsonify(summary)

@@ -45,12 +45,13 @@ class BehaviorAnalyzer:
         csv_logger:       CSVLogger for persisting behavior data.
     """
 
-    def __init__(self, csv_logger=None):
+    def __init__(self, csv_logger=None, db=None):
         """
         Initialize the behavior analyzer.
 
         Args:
             csv_logger: CSVLogger instance. If None, CSV logging is disabled.
+            db: DatabaseManager instance. If None, DB logging is disabled.
         """
         self.previous_zones = {}          # {person_id: zone_name or None}
         self.active_visits = {}           # {(person_id, zone): enter_time_float}
@@ -66,6 +67,7 @@ class BehaviorAnalyzer:
         # {person_id: {zone: total_seconds}}
 
         self.csv_logger = csv_logger
+        self.db = db
         self._logged_visits = set()  # Track which visits have been logged
 
         print("[BEHAVIOR] Behavior analyzer initialized")
@@ -196,6 +198,17 @@ class BehaviorAnalyzer:
                         dwell_time=round(dwell_time, 2),
                         visit_number=visit_num,
                     )
+                    
+                    if hasattr(self, 'db') and self.db is not None:
+                        self.db.insert_behavior(
+                            visitor_id=person_id,
+                            zone_name=zone_name,
+                            enter_time=datetime.fromtimestamp(enter_time).isoformat(),
+                            exit_time=datetime.fromtimestamp(timestamp).isoformat(),
+                            dwell_time=round(dwell_time, 2),
+                            visit_number=visit_num
+                        )
+                        
                     self._logged_visits.add(visit_key)
 
             # Remove from active visits

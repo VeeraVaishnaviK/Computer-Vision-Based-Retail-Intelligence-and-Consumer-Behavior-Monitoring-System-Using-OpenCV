@@ -221,45 +221,55 @@ class DatabaseManager:
         """, (exit_time, duration, self.session_id, track_id))
         self.conn.commit()
 
-    def insert_movement(self, visitor_id, x, y, norm_x=None, norm_y=None,
+    def insert_movement(self, track_id, x, y, norm_x=None, norm_y=None,
                         speed=0.0):
         """
         Insert a movement data point.
 
         Args:
-            visitor_id: References visitors table.
+            track_id:   Tracker-assigned ID.
             x, y:       Pixel coordinates.
             norm_x, norm_y: Normalized coordinates (0-1).
             speed:      Speed in pixels/second.
         """
+        self.cursor.execute("SELECT visitor_id FROM visitors WHERE session_id=? AND track_id=?", (self.session_id, track_id))
+        row = self.cursor.fetchone()
+        if not row:
+            return
+            
         now = datetime.now().isoformat()
         self.cursor.execute("""
             INSERT INTO movement
                 (visitor_id, x, y, normalized_x, normalized_y,
                  timestamp, speed)
             VALUES (?, ?, ?, ?, ?, ?, ?)
-        """, (visitor_id, x, y, norm_x, norm_y, now, speed))
+        """, (row[0], x, y, norm_x, norm_y, now, speed))
         # Commit in batches for performance (handled by caller or periodic)
 
-    def insert_behavior(self, visitor_id, zone_name, enter_time,
+    def insert_behavior(self, track_id, zone_name, enter_time,
                         exit_time=None, dwell_time=0.0, visit_number=1):
         """
         Insert a zone visit record.
 
         Args:
-            visitor_id:   References visitors table.
+            track_id:     Tracker-assigned ID.
             zone_name:    Zone name string.
             enter_time:   ISO timestamp.
             exit_time:    ISO timestamp or None.
             dwell_time:   Seconds spent in zone.
             visit_number: Visit sequence number.
         """
+        self.cursor.execute("SELECT visitor_id FROM visitors WHERE session_id=? AND track_id=?", (self.session_id, track_id))
+        row = self.cursor.fetchone()
+        if not row:
+            return
+            
         self.cursor.execute("""
             INSERT INTO behavior
                 (visitor_id, zone_name, enter_time, exit_time,
                  dwell_time_seconds, visit_number)
             VALUES (?, ?, ?, ?, ?, ?)
-        """, (visitor_id, zone_name, enter_time, exit_time,
+        """, (row[0], zone_name, enter_time, exit_time,
               dwell_time, visit_number))
         self.conn.commit()
 
