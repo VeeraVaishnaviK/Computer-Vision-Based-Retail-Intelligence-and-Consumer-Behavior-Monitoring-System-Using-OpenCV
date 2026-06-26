@@ -215,3 +215,28 @@ setInterval(updateTime, 1000);
 updateAll();
 // Fetch data every 2 seconds
 setInterval(updateAll, 2000);
+
+// Export PDF Function
+function exportPDF() {
+    const element = document.querySelector('.container-fluid.px-4');
+    
+    const opt = {
+        margin:       0.5,
+        filename:     'Retail_Analytics_Report.pdf',
+        image:        { type: 'jpeg', quality: 0.98 },
+        html2canvas:  { scale: 2, useCORS: true },
+        jsPDF:        { unit: 'in', format: 'a4', orientation: 'landscape' }
+    };
+
+    // Change button text briefly
+    const btn = document.querySelector('button[onclick="exportPDF()"]');
+    const oldHtml = btn.innerHTML;
+    btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Exporting...';
+    btn.disabled = true;
+
+    // We can hide video stream during export if it causes CORS issues, but html2canvas ignores most cross-origin stuff gracefully.
+    html2pdf().set(opt).from(element).save().then(() => {
+        btn.innerHTML = oldHtml;
+        btn.disabled = false;
+    });
+}
