@@ -15,7 +15,7 @@
 
 ---
 
-## 📖 Overview
+## Overview
 
 Physical retail stores lack the granular analytics inherent to e-commerce (e.g., bounce rate, time spent on page, click-through rates). This system solves this by analyzing live security camera feeds to extract highly actionable business intelligence in real-time. 
 
@@ -25,21 +25,44 @@ Using state-of-the-art deep learning, the system tracks customer journeys, measu
 
 ---
 
-## ✨ Key Features
+## Key Features
 
-* **🎥 Live Video Streaming:** Real-time MJPEG camera stream embedded directly in the dashboard, augmented with tracking bounding boxes and virtual store zones.
-* **🧍‍♂️ Person Detection & Tracking:** Highly accurate, frame-by-frame person identification utilizing **YOLOv8** and **DeepSORT**.
-* **📊 Interactive BI Dashboard:** A light-themed, professional dashboard built with **Bootstrap 5** and **Chart.js** displaying real-time KPI metrics.
-* **📍 Zone Analytics & Heatmaps:** Automatically maps customer movement to logical store zones, computing dwell times and generating live spatial heatmaps.
-* **🛒 Queue Management:** Detects when the checkout queue exceeds comfortable capacities and issues real-time alerts.
-* **🗄️ Robust Data Persistence:** All footfall and behavior events are logged securely into an **SQLite** database for historical queries.
-* **📄 Instant PDF Reports:** One-click generation of beautifully formatted PDF analytics reports for management review.
+* **Live Video Streaming:** Real-time MJPEG camera stream embedded directly in the dashboard, augmented with tracking bounding boxes and virtual store zones.
+* **Person Detection & Tracking:** Highly accurate, frame-by-frame person identification utilizing **YOLOv8** and **DeepSORT**.
+* **Interactive BI Dashboard:** A light-themed, professional dashboard built with **Bootstrap 5** and **Chart.js** displaying real-time KPI metrics.
+* **Zone Analytics & Heatmaps:** Automatically maps customer movement to logical store zones, computing dwell times and generating live spatial heatmaps.
+* **Queue Management:** Detects when the checkout queue exceeds comfortable capacities and issues real-time alerts.
+* **Robust Data Persistence:** All footfall and behavior events are logged securely into an **SQLite** database for historical queries.
+* **Instant PDF Reports:** One-click generation of beautifully formatted PDF analytics reports for management review.
 
 ---
 
-## 🏗️ System Architecture
+## System Architecture
 
 The application is built on a multi-threaded architecture to decouple the heavy computer vision processing from the web API layer, ensuring maximum FPS and a responsive UI.
+
+```mermaid
+graph TD
+    A[Camera Video Feed] --> B[OpenCV Processing]
+    B --> C[YOLOv8 Detection Model]
+    C --> D[DeepSORT Tracker]
+    D --> E[Behavior & Analytics Modules]
+    
+    E -->|Zone Engagement| F[Zone Manager]
+    E -->|Footfall| G[Entry/Exit Counter]
+    E -->|Queue Size| H[Queue Manager]
+    
+    F --> I[(SQLite Database)]
+    G --> I
+    H --> I
+    
+    B -->|Annotated Frames| J[Shared State Memory]
+    
+    I --> K[Flask REST API]
+    J -->|MJPEG Stream| K
+    
+    K --> L[Interactive Web Dashboard]
+```
 
 1. **Vision Thread (`main.py`):** Captures video frames, runs YOLOv8 inference, updates DeepSORT tracks, computes analytics (zone intersections, movement), and logs events to SQLite. Passes the final annotated frame to the shared state.
 2. **Web Thread (`web_app.py`):** A Flask web server that serves the dashboard, provides REST API endpoints (`/api/summary`, `/api/events`, etc.) by querying the SQLite database, and streams the MJPEG video feed.
@@ -47,7 +70,7 @@ The application is built on a multi-threaded architecture to decouple the heavy 
 
 ---
 
-## 📂 File Structure
+## File Structure
 
 ```text
 ├── analytics/                 # Business logic for retail metrics
@@ -78,7 +101,7 @@ The application is built on a multi-threaded architecture to decouple the heavy 
 
 ---
 
-## 🛠️ Technologies Used
+## Technologies Used
 
 ### Deep Learning & Computer Vision
 * **Ultralytics YOLOv8:** For high-speed, accurate person bounding-box detection.
@@ -99,7 +122,7 @@ The application is built on a multi-threaded architecture to decouple the heavy 
 
 ---
 
-## 🚀 Getting Started
+## Getting Started
 
 ### 1. Installation
 Clone the repository and install the dependencies:
@@ -130,7 +153,7 @@ http://localhost:5000
 
 ---
 
-## 💡 Configuration
+## Configuration
 You can customize the store layout by editing `config.py`. Update the polygon coordinates in `ZONES` to match your specific camera angle and store layout (e.g., defining where the 'Electronics' or 'Billing' areas are located). You can also adjust the `ENTRY_LINE` coordinates for footfall counting.
 
 ---
