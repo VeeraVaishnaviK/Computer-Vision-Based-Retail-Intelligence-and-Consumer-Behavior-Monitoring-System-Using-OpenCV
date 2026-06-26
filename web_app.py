@@ -123,7 +123,7 @@ def api_events():
     # Fetch latest 15 events from behavior_log
     query = """
         SELECT timestamp, visitor_id, event_type, zone_name 
-        FROM behavior_log 
+        FROM behavior 
         WHERE session_id = ? 
         ORDER BY timestamp DESC 
         LIMIT 15
