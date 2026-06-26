@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Retail Intelligence Dashboard</title>
+    
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Sidebar / Navbar -->
+        <nav class="sidebar">
+            <div class="logo">
+                <div class="logo-icon"></div>
+                <h2>Retail<span>CV</span></h2>
+            </div>
+            <ul class="nav-links">
+                <li class="active"><a href="#">Overview</a></li>
+                <li><a href="#zones">Zone Analytics</a></li>
+                <li><a href="#queue">Queue Management</a></li>
+                <li><a href="#heatmap">Spatial Heatmap</a></li>
+            </ul>
+            <div class="live-status">
+                <div class="pulse-dot"></div>
+                <span>LIVE SYSTEM</span>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header>
+                <div class="header-left">
+                    <h1>Store Overview</h1>
+                    <p class="subtitle">Real-time analytics and consumer behavior tracking</p>
+                </div>
+                <div class="header-right">
+                    <button class="btn btn-primary" id="refresh-btn">Refresh Data</button>
+                    <div class="last-updated">Updated: <span id="update-time">Just now</span></div>
+                </div>
+            </header>
+
+            <!-- Metrics Cards -->
+            <section class="metrics-grid">
+                <div class="metric-card glass">
+                    <h3>Active Visitors</h3>
+                    <div class="value" id="val-active">-</div>
+                    <div class="trend positive">Live Occupancy</div>
+                </div>
+                <div class="metric-card glass">
+                    <h3>Total Entries</h3>
+                    <div class="value" id="val-entries">-</div>
+                    <div class="trend">Today's Footfall</div>
+                </div>
+                <div class="metric-card glass">
+                    <h3>Total Exits</h3>
+                    <div class="value" id="val-exits">-</div>
+                    <div class="trend">Departures</div>
+                </div>
+                <div class="metric-card glass">
+                    <h3>Peak Occupancy</h3>
+                    <div class="value" id="val-peak">-</div>
+                    <div class="trend highlight">Max Crowd</div>
+                </div>
+            </section>
+
+            <!-- Charts Section 1 -->
+            <section class="charts-grid" id="zones">
+                <div class="chart-container glass">
+                    <h3>Zone Visits (Popularity)</h3>
+                    <canvas id="zoneVisitsChart"></canvas>
+                </div>
+                <div class="chart-container glass">
+                    <h3>Average Dwell Time per Zone (s)</h3>
+                    <canvas id="zoneDwellChart"></canvas>
+                </div>
+            </section>
+
+            <!-- Charts Section 2 (Queue & Heatmap) -->
+            <section class="charts-grid layout-asym" id="queue">
+                <div class="chart-container glass">
+                    <div class="chart-header">
+                        <h3>Queue Length Over Time</h3>
+                        <span class="badge" id="queue-badge">LOW</span>
+                    </div>
+                    <canvas id="queueChart"></canvas>
+                </div>
+                <div class="chart-container glass" id="heatmap">
+                    <h3>Spatial Heatmap</h3>
+                    <div class="heatmap-wrapper">
+                        <img id="heatmap-img" src="/api/heatmap" alt="Live Heatmap" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'100%\' height=\'100%\'><rect width=\'100%\' height=\'100%\' fill=\'%231e293b\'/><text x=\'50%\' y=\'50%\' fill=\'%2364748b\' font-family=\'sans-serif\' font-size=\'14\' text-anchor=\'middle\'>Waiting for Heatmap Data</text></svg>'">
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Main Logic -->
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>
