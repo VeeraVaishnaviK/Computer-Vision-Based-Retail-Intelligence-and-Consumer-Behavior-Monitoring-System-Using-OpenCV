@@ -120,28 +120,30 @@ def api_events():
         db.close()
         return jsonify([]), 404
         
-    # Fetch latest 15 events from behavior_log
-    query = """
-        SELECT timestamp, visitor_id, event_type, zone_name 
-        FROM behavior 
-        WHERE session_id = ? 
-        ORDER BY timestamp DESC 
-        LIMIT 15
-    """
-    db.cursor.execute(query, (session_id,))
-    rows = db.cursor.fetchall()
+    # Get entries
+    db.cursor.execute("SELECT entry_time, visitor_id FROM visitors WHERE session_id=?", (session_id,))
+    entries = [{"timestamp": row[0], "visitor_id": row[1], "event_type": "ENTRY", "zone_name": ""} for row in db.cursor.fetchall()]
     
-    events = []
-    for row in rows:
-        events.append({
-            "timestamp": row[0],
-            "visitor_id": row[1],
-            "event_type": row[2],
-            "zone_name": row[3] if row[3] else ""
-        })
-        
+    # Get exits
+    db.cursor.execute("SELECT exit_time, visitor_id FROM visitors WHERE session_id=? AND exit_time IS NOT NULL", (session_id,))
+    exits = [{"timestamp": row[0], "visitor_id": row[1], "event_type": "EXIT", "zone_name": ""} for row in db.cursor.fetchall()]
+    
+    # Get zone visits
+    db.cursor.execute("""
+        SELECT b.enter_time, b.visitor_id, b.zone_name 
+        FROM behavior b
+        JOIN visitors v ON b.visitor_id = v.visitor_id
+        WHERE v.session_id=?
+    """, (session_id,))
+    zone_enters = [{"timestamp": row[0], "visitor_id": row[1], "event_type": "ZONE_ENTER", "zone_name": row[2]} for row in db.cursor.fetchall()]
+    
+    # Combine and sort
+    all_events = entries + exits + zone_enters
+    # Sort descending by timestamp
+    all_events.sort(key=lambda x: x["timestamp"], reverse=True)
+    
     db.close()
-    return jsonify(events)
+    return jsonify(all_events[:15])
 
 @app.route('/api/heatmap')
 def api_heatmap():

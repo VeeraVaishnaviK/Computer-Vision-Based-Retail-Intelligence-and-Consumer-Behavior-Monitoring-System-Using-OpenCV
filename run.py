@@ -23,8 +23,7 @@ def run_server():
     log = logging.getLogger('werkzeug')
     log.setLevel(logging.ERROR)
     
-    # Disable development server warning
-    os.environ['WERKZEUG_RUN_MAIN'] = 'true'
+    # Removed WERKZEUG_RUN_MAIN to prevent KeyError
     
     app.run(host='0.0.0.0', port=5000, debug=False, use_reloader=False)
 
