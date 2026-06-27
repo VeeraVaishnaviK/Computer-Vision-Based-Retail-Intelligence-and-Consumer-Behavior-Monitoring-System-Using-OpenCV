@@ -201,7 +201,7 @@ class BehaviorAnalyzer:
                     
                     if hasattr(self, 'db') and self.db is not None:
                         self.db.insert_behavior(
-                            visitor_id=person_id,
+                            track_id=person_id,
                             zone_name=zone_name,
                             enter_time=datetime.fromtimestamp(enter_time).isoformat(),
                             exit_time=datetime.fromtimestamp(timestamp).isoformat(),
