@@ -203,9 +203,8 @@ class QueueManager:
             
             if self.db is not None:
                 self.db.insert_queue(
-                    timestamp=now_iso,
                     queue_length=self.current_length,
-                    wait_estimate=self.current_wait,
+                    estimated_wait=self.current_wait,
                     crowd_level=self.current_level,
                     alert_triggered=int(self.alert_active)
                 )
